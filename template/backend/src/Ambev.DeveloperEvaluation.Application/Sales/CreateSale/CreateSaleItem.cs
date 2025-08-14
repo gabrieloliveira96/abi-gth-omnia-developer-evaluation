@@ -1,4 +1,4 @@
-public class SaleItemRequest
+public class CreateSaleItem
 {
     public int ProductId { get; set; }
     public string ProductName { get; set; }

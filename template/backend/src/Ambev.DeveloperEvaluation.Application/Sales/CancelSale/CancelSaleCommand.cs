@@ -1,3 +1,10 @@
 using MediatR;
 
-public record CancelSaleCommand(Guid Id) : IRequest<bool>;
+public record CancelSaleCommand : IRequest<bool>
+{
+    public Guid Id { get; }
+    public CancelSaleCommand(Guid id)
+    {
+        Id = id;
+    }
+}

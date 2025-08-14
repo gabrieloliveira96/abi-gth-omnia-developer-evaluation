@@ -1,8 +1,8 @@
 using FluentValidation;
 
-public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
+public class CreateSaleRequestValidator : AbstractValidator<CreateSaleRequest>
 {
-    public CreateSaleCommandValidator()
+    public CreateSaleRequestValidator()
     {
         RuleFor(s => s.CustomerId)
             .NotEmpty().WithMessage("O ID do cliente é obrigatório.");
@@ -22,20 +22,20 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
 
         RuleFor(s => s.Items)
             .NotEmpty().WithMessage("A venda deve conter pelo menos um item.");
+
         RuleForEach(s => s.Items).ChildRules(items =>
-            {
-                items.RuleFor(i => i.ProductId)
-                    .GreaterThan(0).WithMessage("O ID do produto deve ser maior que zero.");
+        {
+            items.RuleFor(i => i.ProductId)
+                .GreaterThan(0).WithMessage("O ID do produto deve ser maior que zero.");
 
-                items.RuleFor(i => i.ProductName)
-                    .NotEmpty().WithMessage("O nome do produto é obrigatório.");
+            items.RuleFor(i => i.ProductName)
+                .NotEmpty().WithMessage("O nome do produto é obrigatório.");
 
-                items.RuleFor(i => i.Quantity)
-                    .InclusiveBetween(1, 20).WithMessage("A quantidade deve ser entre 1 e 20.");
+            items.RuleFor(i => i.Quantity)
+                .InclusiveBetween(1, 20).WithMessage("A quantidade deve ser entre 1 e 20.");
 
-                items.RuleFor(i => i.UnitPrice)
-                    .GreaterThan(0).WithMessage("O preço unitário deve ser maior que zero.");
-            });
-
+            items.RuleFor(i => i.UnitPrice)
+                .GreaterThan(0).WithMessage("O preço unitário deve ser maior que zero.");
+        });
     }
 }

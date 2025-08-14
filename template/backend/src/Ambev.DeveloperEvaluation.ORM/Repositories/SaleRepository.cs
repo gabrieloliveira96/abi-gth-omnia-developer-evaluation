@@ -10,20 +10,28 @@ public class SaleRepository : ISaleRepository
         _context = context;
     }
 
-    public async Task AddAsync(Sale sale)
-    {
-        await _context.Sales.AddAsync(sale);
-    }
-
-    public async Task<Sale?> GetByIdAsync(Guid id)
-    {
-        return await _context.Sales
-            .Include(s => s.Items)
-            .FirstOrDefaultAsync(s => s.Id == id);
-    }
     public IQueryable<Sale> Query()
     {
         return _context.Sales.AsNoTracking();
     }
 
+    public async Task<Sale> CreateAsync(Sale sale, CancellationToken cancellationToken = default)
+    {
+        await _context.Sales.AddAsync(sale, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        return sale;
+    }
+
+    public async Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Sales
+                    .Include(s => s.Items)
+                    .FirstOrDefaultAsync(s => s.Id == id,cancellationToken);
+    }
+      public async Task<Sale> UpdateAsync(Sale sale,CancellationToken cancellationToken = default)
+    {
+         _context.Sales.Update(sale);
+        await _context.SaveChangesAsync(cancellationToken);
+        return sale;
+    }
 }

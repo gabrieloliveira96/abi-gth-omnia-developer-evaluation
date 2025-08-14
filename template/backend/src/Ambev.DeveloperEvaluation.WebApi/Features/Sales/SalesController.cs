@@ -1,3 +1,5 @@
+using Ambev.DeveloperEvaluation.WebApi.Common;
+using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,10 +10,12 @@ namespace Ambev.DeveloperEvaluation.WebApi.Controllers;
 public class SalesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IMapper _mapper;
 
-    public SalesController(IMediator mediator)
+    public SalesController(IMediator mediator, IMapper mapper)
     {
         _mediator = mediator;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -22,11 +26,26 @@ public class SalesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> CreateSale([FromBody] CreateSaleCommand command)
+    public async Task<IActionResult> CreateSale([FromBody] CreateSaleRequest request,CancellationToken cancellationToken)
     {
-        var id = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetById), new { id }, new { id });
+        var validator = new CreateSaleRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var command = _mapper.Map<CreateSaleCommand>(request);
+        var response = await _mediator.Send(command, cancellationToken);
+
+        return Created(string.Empty, new ApiResponseWithData<CreateSaleResponse>
+        {
+            Success = true,
+            Message = "Sale created successfully",
+            Data = _mapper.Map<CreateSaleResponse>(response)
+        });
     }
+
+
 
     /// <summary>
     /// Retrieves a sale by its ID.
@@ -53,16 +72,24 @@ public class SalesController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Cancel(Guid id)
+    public async Task<IActionResult> CanceledSale([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new CancelSaleCommand(id));
+        var request = new CancelSaleRequest { Id = id };
+        var validator = new DeleteSaleRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
-        if (!result)
-            return NotFound();
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
 
-        return NoContent();
+        var command = _mapper.Map<CancelSaleCommand>(request.Id);
+        await _mediator.Send(command, cancellationToken);
+
+        return Ok(new ApiResponse
+        {
+            Success = true,
+            Message = "Sale is canceled successfully"
+        });
     }
-
     /// <summary>
     /// Returns a list of sales with support for pagination and sorting.
     /// </summary>

@@ -1,14 +1,19 @@
+using Ambev.DeveloperEvaluation.Domain.Events;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, Unit>
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<UpdateSaleHandler> _logger;
 
-    public UpdateSaleHandler(ISaleRepository saleRepository, IUnitOfWork unitOfWork)
+
+    public UpdateSaleHandler(ISaleRepository saleRepository, IUnitOfWork unitOfWork, ILogger<UpdateSaleHandler> logger)
     {
         _saleRepository = saleRepository;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(UpdateSaleCommand request, CancellationToken cancellationToken)
@@ -32,6 +37,11 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, Unit>
         sale.ReplaceItems(newItems);
 
         await _unitOfWork.CommitAsync();
+
+        var saleCreatedEvent = new SaleUpdatedEvent(sale);
+
+        _logger.LogInformation("Event generated: {EventName} for SaleId: {SaleId}", nameof(SaleUpdatedEvent), sale.Id);
+
         return Unit.Value;
     }
 }

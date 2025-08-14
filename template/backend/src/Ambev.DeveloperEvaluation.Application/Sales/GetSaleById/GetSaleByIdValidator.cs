@@ -1,7 +1,9 @@
 using FluentValidation;
-public class CancelSaleCommandValidator : AbstractValidator<CancelSaleCommand>
+
+public class GetSaleByIdValidator : AbstractValidator<GetSaleByIdCommand>
 {
-    public CancelSaleCommandValidator()
+
+    public GetSaleByIdValidator()
     {
         RuleFor(x => x.Id)
             .NotEmpty()

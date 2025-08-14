@@ -7,6 +7,7 @@ public class UpdateSaleProfile : Profile
         CreateMap<UpdateSaleCommand, Sale>()
             .ForMember(dest => dest.Items, opt => opt.Ignore());
         CreateMap<Sale, UpdateSaleResult>();
-        
+        CreateMap<SaleItem, UpdateSaleItemResult>();
+
     }
 }

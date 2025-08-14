@@ -1,4 +1,4 @@
-public class CreateSaleItem
+public class CreateSaleItemResult
 {
     public int ProductId { get; set; }
     public string ProductName { get; set; }

@@ -1,4 +1,4 @@
-public class UpdateSaleItemRequest
+public class UpdateSaleItemResult
 {
     public int ProductId { get; set; }
     public string ProductName { get; set; }

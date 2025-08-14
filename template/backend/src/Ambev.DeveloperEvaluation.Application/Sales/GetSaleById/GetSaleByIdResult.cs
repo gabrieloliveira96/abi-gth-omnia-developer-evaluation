@@ -1,4 +1,4 @@
-public class UpdateSaleRequest
+public class GetSaleByIdResult
 {
     public Guid Id { get; set; }
     public DateTime Date { get; set; }
@@ -6,5 +6,7 @@ public class UpdateSaleRequest
     public string CustomerName { get; set; }
     public string BranchId { get; set; }
     public string BranchName { get; set; }
-    public List<UpdateSaleItemRequest> Items { get; set; }
+    public decimal TotalAmount { get; set; }
+    public bool IsCancelled { get; set; }
+    public List<GetSaleItemByIdResult> Items { get; set; }
 }

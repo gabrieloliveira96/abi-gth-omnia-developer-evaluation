@@ -55,16 +55,34 @@ public class SalesController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(SaleResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById(Guid id)
+    public async Task<IActionResult> GetSaleById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetSaleByIdQuery(id));
+        var request = new GetSaleByIdRequest { Id = id };
+        var validator = new GetSaleByIdValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
-        if (result == null)
-            return NotFound();
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
 
-        return Ok(result);
+        var command = _mapper.Map<GetSaleByIdCommand>(request.Id);
+        var response = await _mediator.Send(command, cancellationToken);
+        if (response == null)
+        {
+            return NotFound(new ApiResponseWithData<GetSaleByIdResponse>
+            {
+                Success = false,
+                Message = $"Sale with ID {command.Id} not found",
+                Data = null
+            });
+        }
+
+        return Ok(new ApiResponseWithData<GetSaleByIdResponse>
+            {
+                Success = true,
+                Message = "Sale retrieved successfully",
+                Data = _mapper.Map<GetSaleByIdResponse>(response)
+            });
     }
-
     /// <summary>
     /// Cancels a sale.
     /// </summary>
@@ -107,16 +125,38 @@ public class SalesController : ControllerBase
     /// Updates an existing sale.
     /// </summary>
     /// <param name="id">ID of the sale to be updated.</param>
-    /// <param name="command">Updated sale data.</param>
+    /// <param name="request">Updated sale data.</param>
     [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSaleCommand command)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSaleRequest request, CancellationToken cancellationToken)
     {
-        if (id != command.Id)
-            return BadRequest("The ID in the URL differs from the request body.");
+        if (id != request.Id)
+            return BadRequest(new ApiResponseWithData<UpdateSaleResponse>
+            {
+                Success = false,
+                Message = "The ID in the URL differs from the request body.",
+                Data = null
+            });
+            
+        var validator = new UpdateSaleRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
-        await _mediator.Send(command);
-        return NoContent();
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var command = _mapper.Map<UpdateSaleCommand>(request);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return Ok(new ApiResponseWithData<UpdateSaleResponse>
+        {
+            Success = true,
+            Message = "Sale updated successfully",
+            Data = _mapper.Map<UpdateSaleResponse>(result)
+        });
+        
     }
+
 }

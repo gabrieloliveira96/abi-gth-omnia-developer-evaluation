@@ -1,6 +1,6 @@
 public class SaleItem
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public Guid SaleId { get; set; }
     public int ProductId { get; private set; }
     public string ProductName { get; private set; }

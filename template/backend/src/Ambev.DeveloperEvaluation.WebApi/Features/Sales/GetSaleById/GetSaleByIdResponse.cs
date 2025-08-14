@@ -1,4 +1,4 @@
-public class SaleDetailsResponse
+public class GetSaleByIdResponse
 {
     public Guid Id { get; set; }
     public DateTime Date { get; set; }
@@ -8,13 +8,5 @@ public class SaleDetailsResponse
     public string BranchName { get; set; }
     public decimal TotalAmount { get; set; }
     public bool IsCancelled { get; set; }
-    public List<SaleItemDetailsResponse> Items { get; set; }
-}
-
-public class SaleItemDetailsResponse
-{
-     public int ProductId { get; set; }
-    public   string ProductName { get; set; }
-    public      int    Quantity { get; set; }
-    public decimal UnitPrice { get; set; }
+    public List<GetSaleItemByIdResponse> Items { get; set; }
 }

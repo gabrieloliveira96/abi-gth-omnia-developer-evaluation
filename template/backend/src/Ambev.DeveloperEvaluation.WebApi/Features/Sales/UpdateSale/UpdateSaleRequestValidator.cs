@@ -18,6 +18,9 @@ public class UpdateSaleRequestValidator : AbstractValidator<UpdateSaleRequest>
 
         RuleForEach(x => x.Items).ChildRules(items =>
         {
+            items.RuleFor(i => i.ProductId)
+                .GreaterThan(0).WithMessage("O ID do produto deve ser maior que zero.");
+
             items.RuleFor(i => i.ProductName)
                 .NotEmpty().WithMessage("O nome do produto é obrigatório.");
 

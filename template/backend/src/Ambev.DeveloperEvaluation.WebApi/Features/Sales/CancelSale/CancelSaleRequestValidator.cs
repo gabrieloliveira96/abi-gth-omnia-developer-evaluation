@@ -6,6 +6,6 @@ public class DeleteSaleRequestValidator : AbstractValidator<CancelSaleRequest>
     {
         RuleFor(x => x.Id)
             .NotEmpty()
-            .WithMessage("User ID is required");
+            .WithMessage("Sale ID is required");
     }
 }

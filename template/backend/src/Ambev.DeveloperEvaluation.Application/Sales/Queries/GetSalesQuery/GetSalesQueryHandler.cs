@@ -12,7 +12,7 @@ public class GetSalesQueryHandler : IRequestHandler<GetSalesQuery, List<SaleResp
 
     public async Task<List<SaleResponse>> Handle(GetSalesQuery request, CancellationToken cancellationToken)
     {
-        var query = _saleRepository.Query();
+        var query = _saleRepository.QueryAsync(cancellationToken);
 
         // Ordenação dinâmica
         query = request.OrderBy?.ToLower() switch

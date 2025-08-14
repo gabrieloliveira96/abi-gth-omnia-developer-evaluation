@@ -19,8 +19,8 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
 
     public async Task<CreateSaleResult> Handle(CreateSaleCommand command, CancellationToken cancellationToken)
     {
-
         var validator = new CreateSaleCommandValidator();
+
         var validationResult = await validator.ValidateAsync(command, cancellationToken);
 
         if (!validationResult.IsValid)
@@ -28,16 +28,14 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
             var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
             throw new ValidationException(errorMessages);
         }
-
         var sale = _mapper.Map<Sale>(command);
 
-        foreach (var item in sale.Items)
+        foreach (var item in command.Items)
         {
             sale.AddItem(item.ProductId, item.ProductName, item.Quantity, item.UnitPrice);
         }
-
         var saleCreate = await _saleRepository.CreateAsync(sale);
-        
+
         var result = _mapper.Map<CreateSaleResult>(saleCreate);
 
         var saleCreatedEvent = new SaleCreatedEvent(saleCreate);

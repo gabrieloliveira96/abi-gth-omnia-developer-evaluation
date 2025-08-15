@@ -28,6 +28,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
             var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
             throw new ValidationException(errorMessages);
         }
+
         var sale = _mapper.Map<Sale>(command);
 
         foreach (var item in command.Items)
@@ -37,7 +38,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         var saleCreate = await _saleRepository.CreateAsync(sale);
 
         var result = _mapper.Map<CreateSaleResult>(saleCreate);
-
+        
         var saleCreatedEvent = new SaleCreatedEvent(saleCreate);
 
         _logger.LogInformation("Event generated: {EventName} for SaleId: {SaleId}", nameof(SaleCreatedEvent), sale.Id);

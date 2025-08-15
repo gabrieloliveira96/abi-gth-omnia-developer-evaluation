@@ -5,5 +5,6 @@ public class GetSaleByIdProfile : Profile
     public GetSaleByIdProfile()
     {
         CreateMap<Sale, GetSaleByIdResult>();
+        CreateMap<SaleItem, GetSaleItemByIdResult>();
     }
 }

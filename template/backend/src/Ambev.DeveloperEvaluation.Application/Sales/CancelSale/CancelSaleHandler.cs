@@ -6,13 +6,13 @@ using Microsoft.Extensions.Logging;
 public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, bool>
 
 {
-    private readonly ISaleRepository _repository;
+    private readonly ISaleRepository _saleRepository;
     private readonly ILogger<CancelSaleHandler> _logger;
 
 
-    public CancelSaleHandler(ISaleRepository repository, ILogger<CancelSaleHandler> logger)
+    public CancelSaleHandler(ISaleRepository saleRepository, ILogger<CancelSaleHandler> logger)
     {
-        _repository = repository;
+        _saleRepository = saleRepository;
         _logger = logger;
     }
     public async Task<bool> Handle(CancelSaleCommand request, CancellationToken cancellationToken)
@@ -27,12 +27,14 @@ public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, bool>
             throw new ValidationException(errorMessages);
         }
 
-        var sale = await _repository.GetByIdAsync(request.Id);
+        var sale = await _saleRepository.GetByIdAsync(request.Id);
 
         if (sale == null || sale.IsCancelled)
             return false;
 
         sale.Cancel();
+
+        await _saleRepository.UpdateAsync(sale);
 
         var saleCreatedEvent = new SaleCanceledEvent(sale);
 

@@ -6,5 +6,5 @@ public class UpdateSaleResult
       public string CustomerName { get; set; }
       public string BranchId { get; set; }
       public string BranchName { get; set; }
-      // public List<UpdateSaleItemResult> Items { get; set; }
+      public List<UpdateSaleItemResult> Items { get; set; }
 } 

@@ -8,6 +8,5 @@ public class CreateSaleProfile : Profile
             .ForMember(dest => dest.Items, opt => opt.Ignore());
         CreateMap<Sale, CreateSaleResult>();
         CreateMap<SaleItem, CreateSaleItemResult>();
-
-    }
+    } 
 }

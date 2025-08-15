@@ -6,5 +6,5 @@ public class CreateSaleResponse
     public string CustomerName { get; set; }
     public string BranchId { get; set; }
     public string BranchName { get; set; }
-    // public List<CreateSaleItemResponse> Items { get; set; }
+    public List<CreateSaleItemResponse> Items { get; set; }
 }

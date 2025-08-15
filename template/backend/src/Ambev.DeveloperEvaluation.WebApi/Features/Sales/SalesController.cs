@@ -11,11 +11,13 @@ public class SalesController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
+    private readonly ILogger<SalesController> _logger;
 
-    public SalesController(IMediator mediator, IMapper mapper)
+    public SalesController(IMediator mediator, IMapper mapper, ILogger<SalesController> logger)
     {
         _mediator = mediator;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <summary>
@@ -36,6 +38,8 @@ public class SalesController : ControllerBase
 
         var command = _mapper.Map<CreateSaleCommand>(request);
         var response = await _mediator.Send(command, cancellationToken);
+
+
 
         return Created(string.Empty, new ApiResponseWithData<CreateSaleResponse>
         {

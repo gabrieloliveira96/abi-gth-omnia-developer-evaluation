@@ -37,6 +37,8 @@ public class Sale
 
     public void Cancel()
     {
+        if (IsCancelled)
+            throw new InvalidOperationException("Item já cancelado.");
         IsCancelled = true;
     }
     public void Update(DateTime date, string customerId, string customerName, string branchId, string branchName)

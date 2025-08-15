@@ -34,6 +34,18 @@ public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, bool>
 
         sale.Cancel();
 
+        var existingItems = sale.Items.ToList();
+
+        foreach (var item in existingItems)
+        {
+            if(!item.IsCancelled)
+                item.Cancel();
+
+            var itemCanceledEvent = new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update");
+            _logger.LogInformation("Event generated: {EventName} for SaleId: {SaleId}, ItemId: {ItemId}",
+                nameof(ItemCanceledEvent), sale.Id, item.Id);
+        }
+
         await _saleRepository.UpdateAsync(sale);
 
         var saleCreatedEvent = new SaleCanceledEvent(sale);

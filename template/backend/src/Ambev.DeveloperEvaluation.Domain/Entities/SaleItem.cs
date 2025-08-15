@@ -9,6 +9,7 @@ public class SaleItem
     public decimal Discount { get; private set; }
     public decimal TotalAmount => (UnitPrice * Quantity) - Discount;
     public Sale Sale { get; set; } = null!;
+    public bool IsCancelled { get; set; } = false;
 
     private SaleItem() { }
 
@@ -20,6 +21,16 @@ public class SaleItem
         UnitPrice = unitPrice;
         Discount = CalculateDiscount(quantity, unitPrice);
     }
+    public void Update(int productId,string productName, int quantity, decimal unitPrice)
+    {
+        if (IsCancelled)
+            throw new InvalidOperationException("Cannot update a canceled item.");
+        ProductId = productId;
+        ProductName = productName;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+    }
+
 
     private decimal CalculateDiscount(int quantity, decimal unitPrice)
     {
@@ -33,5 +44,11 @@ public class SaleItem
             return quantity * unitPrice * 0.20m;
 
         throw new InvalidOperationException("Desconto inválido para a quantidade fornecida.");
+    }
+    public void Cancel()
+    {
+        if (IsCancelled)
+                throw new InvalidOperationException("Item canceled.");
+            IsCancelled = true;
     }
 }

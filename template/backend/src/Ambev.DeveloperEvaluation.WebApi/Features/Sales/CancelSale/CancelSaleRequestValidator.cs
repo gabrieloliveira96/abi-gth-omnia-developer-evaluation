@@ -1,8 +1,8 @@
 using FluentValidation;
 
-public class DeleteSaleRequestValidator : AbstractValidator<CancelSaleRequest>
+public class CancelSaleRequestValidator : AbstractValidator<CancelSaleRequest>
 {
-    public DeleteSaleRequestValidator()
+    public CancelSaleRequestValidator()
     {
         RuleFor(x => x.Id)
             .NotEmpty()

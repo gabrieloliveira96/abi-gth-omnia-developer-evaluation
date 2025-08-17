@@ -73,3 +73,15 @@ docker-compose down -v
 ---
 
 For any other issues, please refer to the project documentation or contact the maintainers.
+
+
+## ⚙️ How to Run the Application
+
+### 🔧 Requirements
+
+- Docker & Docker Compose
+
+### ▶ Run with Docker
+
+```bash
+docker-compose up --build

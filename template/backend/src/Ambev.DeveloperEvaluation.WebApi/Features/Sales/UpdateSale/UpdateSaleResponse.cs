@@ -6,5 +6,7 @@ public class UpdateSaleResponse
     public string CustomerName { get; set; }
     public string BranchId { get; set; }
     public string BranchName { get; set; }
+    public decimal TotalAmount { get; set; }
+
     public List<UpdateSaleItemResponse> Items { get; set; }
 }

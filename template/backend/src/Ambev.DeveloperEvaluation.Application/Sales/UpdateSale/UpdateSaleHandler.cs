@@ -29,6 +29,7 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         if (!validationResult.IsValid)
         {
             var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
+            _logger.LogInformation("validationResult: {errorMessages}",errorMessages);
             throw new ValidationException(errorMessages);
         }
 
@@ -39,18 +40,14 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         if(sale.IsCancelled)
             throw new InvalidOperationException("Sale is canceled");
 
-        // Atualiza os dados principais da venda
         sale.Update(command.Date, command.CustomerId, command.CustomerName, command.BranchId, command.BranchName);
 
-        // Itens existentes
         var existingItems = sale.Items.ToList();
 
-        // Processa os itens recebidos
         foreach (var itemCmd in command.Items)
         {
             if (itemCmd.Id.HasValue)
             {
-                // Atualiza item existente
                 var existingItem = existingItems.FirstOrDefault(x => x.Id == itemCmd.Id.Value);
                 if (existingItem != null)
                 {
@@ -59,12 +56,10 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
             }
             else
             {
-                // Adiciona novo item
                 sale.AddItem(itemCmd.ProductId, itemCmd.ProductName, itemCmd.Quantity, itemCmd.UnitPrice);
             }
         }
 
-        // Cancela itens que não estão mais na request
         var idsFromRequest = command.Items.Where(i => i.Id.HasValue).Select(i => i.Id.Value).ToHashSet();
         var toCancel = existingItems.Where(x => !idsFromRequest.Contains(x.Id) && !x.IsCancelled).ToList();
 
@@ -73,15 +68,13 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
             if(!item.IsCancelled)
                 item.Cancel();
 
-            var itemCanceledEvent = new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update");
-            _logger.LogInformation("Event generated: {EventName} for SaleId: {SaleId}, ItemId: {ItemId}",
-                nameof(ItemCanceledEvent), sale.Id, item.Id);
+            item.AddDomainEvent(new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update"));
         }
+
+        sale.AddDomainEvent(new SaleUpdatedEvent(sale));
 
         var updatedSale = await _saleRepository.UpdateAsync(sale);
 
-        var saleUpdatedEvent = new SaleUpdatedEvent(updatedSale);
-        _logger.LogInformation("Event generated: {EventName} for SaleId: {SaleId}", nameof(SaleUpdatedEvent), sale.Id);
 
         return _mapper.Map<UpdateSaleResult>(updatedSale);
     }

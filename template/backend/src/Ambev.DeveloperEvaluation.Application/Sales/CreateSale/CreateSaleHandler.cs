@@ -26,6 +26,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         if (!validationResult.IsValid)
         {
             var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
+            _logger.LogInformation("validationResult: {errorMessages}",errorMessages);
             throw new ValidationException(errorMessages);
         }
 
@@ -35,14 +36,12 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         {
             sale.AddItem(item.ProductId, item.ProductName, item.Quantity, item.UnitPrice);
         }
+        sale.AddDomainEvent(new SaleCreatedEvent(sale));
+
         var saleCreate = await _saleRepository.CreateAsync(sale);
 
         var result = _mapper.Map<CreateSaleResult>(saleCreate);
         
-        var saleCreatedEvent = new SaleCreatedEvent(saleCreate);
-
-        _logger.LogInformation("Event generated: {EventName} for SaleId: {SaleId}", nameof(SaleCreatedEvent), sale.Id);
-
-        return result;;  
+        return result; ;  
     }
 }

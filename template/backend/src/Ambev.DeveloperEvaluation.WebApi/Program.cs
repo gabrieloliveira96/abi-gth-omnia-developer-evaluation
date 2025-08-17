@@ -1,5 +1,6 @@
 using System.Reflection;
 using Ambev.DeveloperEvaluation.Application;
+using Ambev.DeveloperEvaluation.Application.Events;
 using Ambev.DeveloperEvaluation.Common.HealthChecks;
 using Ambev.DeveloperEvaluation.Common.Logging;
 using Ambev.DeveloperEvaluation.Common.Security;
@@ -57,7 +58,7 @@ public class Program
                 cfg.RegisterServicesFromAssemblies(
                     typeof(ApplicationLayer).Assembly,
                     typeof(Program).Assembly
-                );
+                    );
             });
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));

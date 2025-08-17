@@ -1,4 +1,6 @@
-﻿using Ambev.DeveloperEvaluation.Domain.Entities;
+﻿using Ambev.DeveloperEvaluation.Domain.Common;
+using Ambev.DeveloperEvaluation.Domain.Entities;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -9,11 +11,15 @@ namespace Ambev.DeveloperEvaluation.ORM;
 
 public class DefaultContext : DbContext
 {
-    public DbSet<User> Users { get; set; }
-    public DbSet<Sale> Sales  { get; set; }
+    private readonly IMediator? _mediator;
 
-    public DefaultContext(DbContextOptions<DefaultContext> options) : base(options)
+    public DbSet<User> Users { get; set; }
+    public DbSet<Sale> Sales { get; set; }
+
+    public DefaultContext(DbContextOptions<DefaultContext> options, IMediator? mediator = null) 
+        : base(options)
     {
+        _mediator = mediator;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -36,25 +42,30 @@ public class DefaultContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
-}
-public class YourDbContextFactory : IDesignTimeDbContextFactory<DefaultContext>
-{
-    public DefaultContext CreateDbContext(string[] args)
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        IConfigurationRoot configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json")
-            .Build();
+        var domainEntities = ChangeTracker
+            .Entries<BaseEntity>()
+            .Where(x => x.Entity.DomainEvents.Any())
+            .ToList();
 
-        var builder = new DbContextOptionsBuilder<DefaultContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var domainEvents = domainEntities
+            .SelectMany(x => x.Entity.DomainEvents)
+            .ToList();
 
-        builder.UseNpgsql(
-               connectionString,
-               b => b.MigrationsAssembly("Ambev.DeveloperEvaluation.ORM")
+        var result = await base.SaveChangesAsync(cancellationToken);
 
-        );
+        domainEntities.ForEach(e => e.Entity.ClearDomainEvents());
 
-        return new DefaultContext(builder.Options);
+        if (_mediator is not null)
+        {
+            foreach (var domainEvent in domainEvents)
+            {
+                await _mediator.Publish(domainEvent, cancellationToken);
+            }
+        }
+
+        return result;
     }
 }

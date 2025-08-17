@@ -1,12 +1,13 @@
-namespace Ambev.DeveloperEvaluation.Domain.Events
-{
-    public class SaleCreatedEvent
-    {
-        public Sale Sale { get; }
+using MediatR;
 
-        public SaleCreatedEvent(Sale sale)
-        {
-            Sale = sale;
-        }
+public class SaleCreatedEvent : INotification
+{
+    public Sale Sale { get; }
+    public DateTime OccurredOn { get; }
+
+    public SaleCreatedEvent(Sale sale)
+    {
+        Sale = sale;
+        OccurredOn = DateTime.UtcNow;
     }
 }

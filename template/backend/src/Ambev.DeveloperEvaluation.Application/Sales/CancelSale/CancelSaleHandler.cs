@@ -24,6 +24,7 @@ public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, bool>
         if (!validationResult.IsValid)
         {
             var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
+            _logger.LogInformation("validationResult: {errorMessages}",errorMessages);
             throw new ValidationException(errorMessages);
         }
 
@@ -41,16 +42,12 @@ public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, bool>
             if(!item.IsCancelled)
                 item.Cancel();
 
-            var itemCanceledEvent = new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update");
-            _logger.LogInformation("Event generated: {EventName} for SaleId: {SaleId}, ItemId: {ItemId}",
-                nameof(ItemCanceledEvent), sale.Id, item.Id);
+            item.AddDomainEvent(new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update"));
         }
 
+        sale.AddDomainEvent(new SaleCanceledEvent(sale));
+
         await _saleRepository.UpdateAsync(sale);
-
-        var saleCreatedEvent = new SaleCanceledEvent(sale);
-
-        _logger.LogInformation("Event generated: {EventName} for SaleId: {SaleId}", nameof(SaleCanceledEvent), sale.Id);
 
         return true;
     }

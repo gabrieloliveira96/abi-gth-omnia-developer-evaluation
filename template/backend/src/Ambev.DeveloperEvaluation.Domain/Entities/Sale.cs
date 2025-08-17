@@ -1,5 +1,7 @@
 
-public class Sale
+using Ambev.DeveloperEvaluation.Domain.Common;
+
+public class Sale : BaseEntity
 {
     public Guid Id { get; private set; }
     public DateTime Date { get; private set; }

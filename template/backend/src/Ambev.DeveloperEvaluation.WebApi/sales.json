@@ -1,0 +1,103 @@
+[
+  {
+    "date": "2025-08-01",
+    "customerId": "C001",
+    "customerName": "João Silva",
+    "branchId": "B01",
+    "branchName": "Loja Centro",
+    "items": [
+      { "productId": 101, "productName": "Produto A", "quantity": 2, "unitPrice": 50.00 },
+      { "productId": 102, "productName": "Produto B", "quantity": 1, "unitPrice": 30.00 }
+    ]
+  },
+  {
+    "date": "2025-08-02",
+    "customerId": "C002",
+    "customerName": "Maria Oliveira",
+    "branchId": "B02",
+    "branchName": "Loja Norte",
+    "items": [
+      { "productId": 103, "productName": "Produto C", "quantity": 3, "unitPrice": 20.00 }
+    ]
+  },
+  {
+    "date": "2025-08-03",
+    "customerId": "C003",
+    "customerName": "Carlos Souza",
+    "branchId": "B03",
+    "branchName": "Loja Sul",
+    "items": [
+      { "productId": 104, "productName": "Produto D", "quantity": 5, "unitPrice": 10.00 }
+    ]
+  },
+  {
+    "date": "2025-08-04",
+    "customerId": "C004",
+    "customerName": "Ana Paula",
+    "branchId": "B04",
+    "branchName": "Loja Leste",
+    "items": [
+      { "productId": 105, "productName": "Produto E", "quantity": 1, "unitPrice": 100.00 }
+    ]
+  },
+  {
+    "date": "2025-08-05",
+    "customerId": "C005",
+    "customerName": "Lucas Pereira",
+    "branchId": "B05",
+    "branchName": "Loja Oeste",
+    "items": [
+      { "productId": 106, "productName": "Produto F", "quantity": 2, "unitPrice": 45.00 }
+    ]
+  },
+  {
+    "date": "2025-08-06",
+    "customerId": "C006",
+    "customerName": "Juliana Martins",
+    "branchId": "B06",
+    "branchName": "Loja Industrial",
+    "items": [
+      { "productId": 107, "productName": "Produto G", "quantity": 4, "unitPrice": 25.00 }
+    ]
+  },
+  {
+    "date": "2025-08-07",
+    "customerId": "C007",
+    "customerName": "Pedro Costa",
+    "branchId": "B07",
+    "branchName": "Loja Campo",
+    "items": [
+      { "productId": 108, "productName": "Produto H", "quantity": 2, "unitPrice": 80.00 }
+    ]
+  },
+  {
+    "date": "2025-08-08",
+    "customerId": "C008",
+    "customerName": "Mariana Rocha",
+    "branchId": "B08",
+    "branchName": "Loja Bairro",
+    "items": [
+      { "productId": 109, "productName": "Produto I", "quantity": 3, "unitPrice": 15.00 }
+    ]
+  },
+  {
+    "date": "2025-08-09",
+    "customerId": "C009",
+    "customerName": "Fernando Lima",
+    "branchId": "B09",
+    "branchName": "Loja Shopping",
+    "items": [
+      { "productId": 110, "productName": "Produto J", "quantity": 1, "unitPrice": 120.00 }
+    ]
+  },
+  {
+    "date": "2025-08-10",
+    "customerId": "C010",
+    "customerName": "Larissa Alves",
+    "branchId": "B10",
+    "branchName": "Loja Premium",
+    "items": [
+      { "productId": 111, "productName": "Produto K", "quantity": 6, "unitPrice": 12.00 }
+    ]
+  }
+]

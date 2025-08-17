@@ -10,10 +10,13 @@ public class SaleRepository : ISaleRepository
         _context = context;
     }
 
-    public IQueryable<Sale> QueryAsync(CancellationToken cancellationToken)
+    public IQueryable<Sale> Query(CancellationToken cancellationToken = default)
     {
-        return _context.Sales.Include(x => x.Items).AsNoTracking();
+        return _context.Sales
+            .Include(x => x.Items)
+            .AsNoTracking();
     }
+
     public async Task<Sale> CreateAsync(Sale sale, CancellationToken cancellationToken = default)
     {
         await _context.Sales.AddAsync(sale, cancellationToken);

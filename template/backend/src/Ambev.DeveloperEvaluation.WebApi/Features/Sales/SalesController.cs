@@ -57,7 +57,7 @@ public class SalesController : ControllerBase
     /// <param name="id">ID of the sale.</param>
     /// <returns>The corresponding sale.</returns>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(SaleResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GetSaleByIdResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSaleById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -113,16 +113,31 @@ public class SalesController : ControllerBase
         });
     }
     /// <summary>
-    /// Returns a list of sales with support for pagination and sorting.
+    /// Returns a paginated list of sales with filters and sorting.
     /// </summary>
-    /// <param name="query">Filtering, sorting and pagination parameters.</param>
-    /// <returns>Paginated list of sales.</returns>
-    [HttpGet]
-    [ProducesResponseType(typeof(List<SaleResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSales([FromQuery] GetSalesQuery query)
+    [HttpGet("paginated")]
+    [ProducesResponseType(typeof(PaginatedResponse<GetSalesResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetSales([FromQuery] GetSalesRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(query);
-        return Ok(result);
+        var validator = new GetSaleValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var command = _mapper.Map<GetSalesCommand>(request);
+
+        var result = await _mediator.Send(command, cancellationToken);
+        return Ok(new PaginatedResponse<GetSalesResponse>
+        {
+            CurrentPage = request.PageNumber,
+            TotalPages = (int)Math.Ceiling((double)result.TotalCount / request.PageSize),
+            TotalCount = result.TotalCount,
+            Data = _mapper.Map<IEnumerable<GetSalesResponse>>(result.Data),
+            Success = true,
+            Message = "Sales retrieved successfully"
+        });
     }
 
     /// <summary>
@@ -162,47 +177,47 @@ public class SalesController : ControllerBase
         });
         
     }
-/// <summary>
-/// Cancels a specific sale item.
-/// </summary>
-/// <param name="saleId">ID of the sale.</param>
-/// <param name="itemId">ID of the item to cancel.</param>
-[HttpDelete("{saleId}/items/{itemId}")]
-[ProducesResponseType(StatusCodes.Status200OK)]
-[ProducesResponseType(StatusCodes.Status400BadRequest)]
-[ProducesResponseType(StatusCodes.Status404NotFound)]
-public async Task<IActionResult> CancelSaleItem([FromRoute] Guid saleId, [FromRoute] Guid itemId, CancellationToken cancellationToken)
-{
-    var request = new CancelSaleItemRequest
+    /// <summary>
+    /// Cancels a specific sale item.
+    /// </summary>
+    /// <param name="saleId">ID of the sale.</param>
+    /// <param name="itemId">ID of the item to cancel.</param>
+    [HttpDelete("{saleId}/items/{itemId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelSaleItem([FromRoute] Guid saleId, [FromRoute] Guid itemId, CancellationToken cancellationToken)
     {
-        SaleId = saleId,
-        ItemId = itemId
-    };
-
-    var validator = new CancelSaleItemRequestValidator();
-    var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
-    if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors);
-
-    var command = _mapper.Map<CancelSaleItemCommand>(request);
-
-    var result = await _mediator.Send(command, cancellationToken);
-
-    if (!result)
-    {
-        return NotFound(new ApiResponse
+        var request = new CancelSaleItemRequest
         {
-            Success = false,
-            Message = "Sale or Item not found"
+            SaleId = saleId,
+            ItemId = itemId
+        };
+
+        var validator = new CancelSaleItemRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var command = _mapper.Map<CancelSaleItemCommand>(request);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result)
+        {
+            return NotFound(new ApiResponse
+            {
+                Success = false,
+                Message = "Sale or Item not found"
+            });
+        }
+
+        return Ok(new ApiResponse
+        {
+            Success = true,
+            Message = "Sale item canceled successfully"
         });
     }
-
-    return Ok(new ApiResponse
-    {
-        Success = true,
-        Message = "Sale item canceled successfully"
-    });
-}
 
 }

@@ -51,9 +51,4 @@ public class Sale : BaseEntity
         BranchId = branchId;
         BranchName = branchName;
     }
-    public void ReplaceItems(List<SaleItem> newItems)
-    {
-        _items.Clear();
-        _items.AddRange(newItems);
-    }
 }

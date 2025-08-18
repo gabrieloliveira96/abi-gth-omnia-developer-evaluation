@@ -30,7 +30,7 @@ public class Sale : BaseEntity
     public void AddItem(int productId, string productName, int quantity, decimal unitPrice)
     {
         if (quantity > 20)
-            throw new InvalidOperationException("A venda não pode conter mais de 20 unidades de um mesmo produto.");
+            throw new InvalidOperationException("The sale cannot contain more than 20 units of the same product");
 
         var item = new SaleItem(productId, productName, quantity, unitPrice);
         _items.Add(item);
@@ -39,7 +39,7 @@ public class Sale : BaseEntity
     public void Cancel()
     {
         if (IsCancelled)
-            throw new InvalidOperationException("Item já cancelado.");
+            throw new InvalidOperationException("Item already cancelled.");
         IsCancelled = true;
     }
     public void Update(DateTime date, string customerId, string customerName, string branchId, string branchName)

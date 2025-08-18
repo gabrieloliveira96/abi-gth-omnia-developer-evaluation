@@ -44,12 +44,12 @@ public class SaleItem:BaseEntity
         if (quantity >= 10 && quantity <= 20)
             return quantity * unitPrice * 0.20m;
 
-        throw new InvalidOperationException("Desconto inválido para a quantidade fornecida.");
+        throw new InvalidOperationException("Discount invalid for the quantity provided.");
     }
     public void Cancel()
     {
         if (IsCancelled)
-                throw new InvalidOperationException("Item canceled.");
-            IsCancelled = true;
+            throw new InvalidOperationException("Item is already canceled");
+        IsCancelled = true;
     }
 }

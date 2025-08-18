@@ -92,7 +92,7 @@ public class SalesController : BaseController
         var command = _mapper.Map<CancelSaleCommand>(request.Id);
         await _mediator.Send(command, cancellationToken);
     
-        return base.Ok(new ApiResponse
+        return Ok(new ApiResponse
         {
             Success = true,
             Message = "Sale is canceled successfully"
@@ -179,12 +179,9 @@ public class SalesController : BaseController
 
         var command = _mapper.Map<CancelSaleItemCommand>(request);
 
-        var result = await _mediator.Send(command, cancellationToken);
+        await _mediator.Send(command, cancellationToken);
 
-        if (!result)
-            return NotFound(message: "Sale or Item not found");
-
-        return base.Ok(new ApiResponse
+        return Ok(new ApiResponse
         {
             Success = true,
             Message = "Sale item canceled successfully"

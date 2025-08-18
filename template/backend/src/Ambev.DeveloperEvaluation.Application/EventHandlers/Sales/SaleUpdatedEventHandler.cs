@@ -18,12 +18,19 @@ public class SaleUpdatedEventHandler : INotificationHandler<SaleUpdatedEvent>
 
     public async Task Handle(SaleUpdatedEvent notification, CancellationToken cancellationToken)
     {
-        var sale = notification.Sale;
+        try
+        {
+            var sale = notification.Sale;
 
-        await _eventStore.SaveAsync(notification, cancellationToken);
+            await _eventStore.SaveAsync(notification, cancellationToken);
 
-        _logger.LogInformation("SaleUpdatedEvent handled: SaleId={SaleId}, Customer={Customer}, Total={Total}",
-            sale.Id, sale.CustomerName, sale.TotalAmount);
-
+            _logger.LogInformation("SaleUpdatedEvent handled: SaleId={SaleId}, Customer={Customer}, Total={Total}",
+                sale.Id, sale.CustomerName, sale.TotalAmount);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, ex.Message);
+            throw; 
+        }
     }
 }

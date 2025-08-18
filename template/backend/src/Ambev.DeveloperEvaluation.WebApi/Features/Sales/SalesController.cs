@@ -7,7 +7,7 @@ namespace Ambev.DeveloperEvaluation.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class SalesController : ControllerBase
+public class SalesController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
@@ -28,7 +28,7 @@ public class SalesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> CreateSale([FromBody] CreateSaleRequest request,CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateSale([FromBody] CreateSaleRequest request, CancellationToken cancellationToken)
     {
         var validator = new CreateSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
@@ -38,25 +38,22 @@ public class SalesController : ControllerBase
 
         var command = _mapper.Map<CreateSaleCommand>(request);
         var response = await _mediator.Send(command, cancellationToken);
+        var createdId = response.Id;
+        var locationUri = Url.Action(nameof(GetSaleById), "Sales", new { id = createdId }, Request.Scheme);
 
-
-
-        return Created(string.Empty, new ApiResponseWithData<CreateSaleResponse>
-        {
-            Success = true,
-            Message = "Sale created successfully",
-            Data = _mapper.Map<CreateSaleResponse>(response)
-        });
+        return Created(
+            routeName: nameof(GetSaleById),
+            routeValues: new { id = response.Id },
+            data: _mapper.Map<CreateSaleResponse>(response)
+        );
     }
-
-
 
     /// <summary>
     /// Retrieves a sale by its ID.
     /// </summary>
     /// <param name="id">ID of the sale.</param>
     /// <returns>The corresponding sale.</returns>
-    [HttpGet("{id}")]
+    [HttpGet("{id}", Name = "GetSaleById")]
     [ProducesResponseType(typeof(GetSaleByIdResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSaleById([FromRoute] Guid id, CancellationToken cancellationToken)
@@ -72,20 +69,9 @@ public class SalesController : ControllerBase
         var response = await _mediator.Send(command, cancellationToken);
         if (response == null)
         {
-            return NotFound(new ApiResponseWithData<GetSaleByIdResponse>
-            {
-                Success = false,
-                Message = $"Sale with ID {command.Id} not found",
-                Data = null
-            });
+            return NotFound(message: "Sale with ID {command.Id} not found");
         }
-
-        return Ok(new ApiResponseWithData<GetSaleByIdResponse>
-            {
-                Success = true,
-                Message = "Sale retrieved successfully",
-                Data = _mapper.Map<GetSaleByIdResponse>(response)
-            });
+        return Ok(data: _mapper.Map<GetSaleByIdResponse>(response));
     }
     /// <summary>
     /// Cancels a sale.
@@ -105,12 +91,13 @@ public class SalesController : ControllerBase
 
         var command = _mapper.Map<CancelSaleCommand>(request.Id);
         await _mediator.Send(command, cancellationToken);
-
-        return Ok(new ApiResponse
+    
+        return base.Ok(new ApiResponse
         {
             Success = true,
             Message = "Sale is canceled successfully"
         });
+
     }
     /// <summary>
     /// Returns a paginated list of sales with filters and sorting.
@@ -152,12 +139,7 @@ public class SalesController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSaleRequest request, CancellationToken cancellationToken)
     {
         if (id != request.Id)
-            return BadRequest(new ApiResponseWithData<UpdateSaleResponse>
-            {
-                Success = false,
-                Message = "The ID in the URL differs from the request body.",
-                Data = null
-            });
+            return BadRequest(message:"The ID in the URL differs from the request body.");
             
         var validator = new UpdateSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
@@ -168,14 +150,9 @@ public class SalesController : ControllerBase
         var command = _mapper.Map<UpdateSaleCommand>(request);
 
         var result = await _mediator.Send(command, cancellationToken);
-
-        return Ok(new ApiResponseWithData<UpdateSaleResponse>
-        {
-            Success = true,
-            Message = "Sale updated successfully",
-            Data = _mapper.Map<UpdateSaleResponse>(result)
-        });
         
+        return Ok(data: _mapper.Map<UpdateSaleResponse>(result));
+
     }
     /// <summary>
     /// Cancels a specific sale item.
@@ -205,15 +182,9 @@ public class SalesController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
 
         if (!result)
-        {
-            return NotFound(new ApiResponse
-            {
-                Success = false,
-                Message = "Sale or Item not found"
-            });
-        }
+            return NotFound(message: "Sale or Item not found");
 
-        return Ok(new ApiResponse
+        return base.Ok(new ApiResponse
         {
             Success = true,
             Message = "Sale item canceled successfully"

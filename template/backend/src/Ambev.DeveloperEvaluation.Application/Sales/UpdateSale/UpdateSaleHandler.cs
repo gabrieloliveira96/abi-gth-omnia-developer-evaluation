@@ -23,59 +23,66 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 
     public async Task<UpdateSaleResult> Handle(UpdateSaleCommand command, CancellationToken cancellationToken)
     {
-        var validator = new UpdateSaleCommandValidator();
-        var validationResult = await validator.ValidateAsync(command, cancellationToken);
-
-        if (!validationResult.IsValid)
+        try
         {
-            var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
-            _logger.LogInformation("validationResult: {errorMessages}",errorMessages);
-            throw new ValidationException(errorMessages);
-        }
+            var validator = new UpdateSaleCommandValidator();
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
 
-        var sale = await _saleRepository.GetByIdAsync(command.Id);
-        if (sale == null)
-            throw new InvalidOperationException("Sale not found");
-        
-        if(sale.IsCancelled)
-            throw new InvalidOperationException("Sale is canceled");
-
-        sale.Update(command.Date, command.CustomerId, command.CustomerName, command.BranchId, command.BranchName);
-
-        var existingItems = sale.Items.ToList();
-
-        foreach (var itemCmd in command.Items)
-        {
-            if (itemCmd.Id.HasValue)
+            if (!validationResult.IsValid)
             {
-                var existingItem = existingItems.FirstOrDefault(x => x.Id == itemCmd.Id.Value);
-                if (existingItem != null)
+                var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
+                _logger.LogInformation("validationResult: {errorMessages}", errorMessages);
+                throw new ValidationException(errorMessages);
+            }
+
+            var sale = await _saleRepository.GetByIdAsync(command.Id);
+            if (sale == null)
+                throw new InvalidOperationException("Sale not found");
+
+            if (sale.IsCancelled)
+                throw new InvalidOperationException("Sale is canceled");
+
+            sale.Update(command.Date, command.CustomerId, command.CustomerName, command.BranchId, command.BranchName);
+
+            var existingItems = sale.Items.ToList();
+
+            foreach (var itemCmd in command.Items)
+            {
+                if (itemCmd.Id.HasValue)
                 {
-                    existingItem.Update(itemCmd.ProductId, itemCmd.ProductName, itemCmd.Quantity, itemCmd.UnitPrice);
+                    var existingItem = existingItems.FirstOrDefault(x => x.Id == itemCmd.Id.Value);
+                    if (existingItem != null)
+                    {
+                        existingItem.Update(itemCmd.ProductId, itemCmd.ProductName, itemCmd.Quantity, itemCmd.UnitPrice);
+                    }
+                }
+                else
+                {
+                    sale.AddItem(itemCmd.ProductId, itemCmd.ProductName, itemCmd.Quantity, itemCmd.UnitPrice);
                 }
             }
-            else
+
+            var idsFromRequest = command.Items.Where(i => i.Id.HasValue).Select(i => i.Id.Value).ToHashSet();
+            var toCancel = existingItems.Where(x => !idsFromRequest.Contains(x.Id) && !x.IsCancelled).ToList();
+
+            foreach (var item in toCancel)
             {
-                sale.AddItem(itemCmd.ProductId, itemCmd.ProductName, itemCmd.Quantity, itemCmd.UnitPrice);
+                if (!item.IsCancelled)
+                    item.Cancel();
+
+                item.AddDomainEvent(new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update"));
             }
+
+            sale.AddDomainEvent(new SaleUpdatedEvent(sale));
+
+            var updatedSale = await _saleRepository.UpdateAsync(sale);
+            
+            return _mapper.Map<UpdateSaleResult>(updatedSale);
         }
-
-        var idsFromRequest = command.Items.Where(i => i.Id.HasValue).Select(i => i.Id.Value).ToHashSet();
-        var toCancel = existingItems.Where(x => !idsFromRequest.Contains(x.Id) && !x.IsCancelled).ToList();
-
-        foreach (var item in toCancel)
+        catch (InvalidOperationException ex)
         {
-            if(!item.IsCancelled)
-                item.Cancel();
-
-            item.AddDomainEvent(new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update"));
+            _logger.LogWarning(ex, ex.Message);
+            throw; 
         }
-
-        sale.AddDomainEvent(new SaleUpdatedEvent(sale));
-
-        var updatedSale = await _saleRepository.UpdateAsync(sale);
-
-
-        return _mapper.Map<UpdateSaleResult>(updatedSale);
     }
 }

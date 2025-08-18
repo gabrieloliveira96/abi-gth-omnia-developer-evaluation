@@ -67,6 +67,8 @@ public class Program
             var app = builder.Build();
 
             app.UseMiddleware<ValidationExceptionMiddleware>();
+            app.UseMiddleware<GlobalExceptionMiddleware>();
+
 
             using (var scope = app.Services.CreateScope())
             {

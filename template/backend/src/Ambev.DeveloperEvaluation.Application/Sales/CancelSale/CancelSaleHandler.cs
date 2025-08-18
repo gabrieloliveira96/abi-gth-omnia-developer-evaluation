@@ -17,39 +17,48 @@ public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, bool>
     }
     public async Task<bool> Handle(CancelSaleCommand request, CancellationToken cancellationToken)
     {
-
-        var validator = new CancelSaleCommandValidator();
-        var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
-        if (!validationResult.IsValid)
+        try
         {
-            var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
-            _logger.LogInformation("validationResult: {errorMessages}",errorMessages);
-            throw new ValidationException(errorMessages);
+            var validator = new CancelSaleCommandValidator();
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                var errorMessages = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
+                _logger.LogInformation("validationResult: {errorMessages}", errorMessages);
+                throw new ValidationException(errorMessages);
+            }
+
+            var sale = await _saleRepository.GetByIdAsync(request.Id);
+            if (sale == null)
+                throw new InvalidOperationException("Sale not found");
+
+            if (sale.IsCancelled)
+                throw new InvalidOperationException("Sale already is canceled");
+
+            sale.Cancel();
+
+            var existingItems = sale.Items.ToList();
+
+            foreach (var item in existingItems)
+            {
+                if (!item.IsCancelled)
+                    item.Cancel();
+
+                item.AddDomainEvent(new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update"));
+            }
+
+            sale.AddDomainEvent(new SaleCanceledEvent(sale));
+
+            await _saleRepository.UpdateAsync(sale);
+
+            return true;
         }
-
-        var sale = await _saleRepository.GetByIdAsync(request.Id);
-
-        if (sale == null || sale.IsCancelled)
-            return false;
-
-        sale.Cancel();
-
-        var existingItems = sale.Items.ToList();
-
-        foreach (var item in existingItems)
+        catch (InvalidOperationException ex)
         {
-            if(!item.IsCancelled)
-                item.Cancel();
-
-            item.AddDomainEvent(new ItemCanceledEvent(sale.Id, item.Id, "Item removed during update"));
+            _logger.LogWarning(ex, ex.Message);
+            throw; 
         }
-
-        sale.AddDomainEvent(new SaleCanceledEvent(sale));
-
-        await _saleRepository.UpdateAsync(sale);
-
-        return true;
     }
 
 }

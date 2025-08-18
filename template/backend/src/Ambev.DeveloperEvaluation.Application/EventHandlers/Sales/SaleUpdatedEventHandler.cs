@@ -7,19 +7,23 @@ namespace Ambev.DeveloperEvaluation.Application.Events;
 public class SaleUpdatedEventHandler : INotificationHandler<SaleUpdatedEvent>
 {
     private readonly ILogger<SaleUpdatedEventHandler> _logger;
+    private readonly IEventStore _eventStore;
 
-    public SaleUpdatedEventHandler(ILogger<SaleUpdatedEventHandler> logger)
+
+    public SaleUpdatedEventHandler(ILogger<SaleUpdatedEventHandler> logger, IEventStore eventStore)
     {
         _logger = logger;
+        _eventStore = eventStore;
     }
 
-    public Task Handle(SaleUpdatedEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SaleUpdatedEvent notification, CancellationToken cancellationToken)
     {
         var sale = notification.Sale;
+
+        await _eventStore.SaveAsync(notification, cancellationToken);
 
         _logger.LogInformation("SaleUpdatedEvent handled: SaleId={SaleId}, Customer={Customer}, Total={Total}",
             sale.Id, sale.CustomerName, sale.TotalAmount);
 
-        return Task.CompletedTask;
     }
 }

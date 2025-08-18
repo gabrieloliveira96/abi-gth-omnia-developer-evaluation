@@ -5,6 +5,7 @@ using Ambev.DeveloperEvaluation.Common.HealthChecks;
 using Ambev.DeveloperEvaluation.Common.Logging;
 using Ambev.DeveloperEvaluation.Common.Security;
 using Ambev.DeveloperEvaluation.Common.Validation;
+using Ambev.DeveloperEvaluation.Infrastructure.Extensions;
 using Ambev.DeveloperEvaluation.IoC;
 using Ambev.DeveloperEvaluation.ORM;
 using Ambev.DeveloperEvaluation.WebApi.Middleware;
@@ -21,9 +22,8 @@ public class Program
         try
         {
             Log.Information("Starting web application");
-            
 
-            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            var builder = WebApplication.CreateBuilder(args);
             builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
             builder.AddDefaultLogging();
@@ -32,7 +32,8 @@ public class Program
             builder.Services.AddEndpointsApiExplorer();
 
             builder.AddBasicHealthChecks();
-             builder.Services.AddSwaggerGen(c =>
+
+            builder.Services.AddSwaggerGen(c =>
             {
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -46,10 +47,10 @@ public class Program
                 )
             );
 
-            builder.Services.AddJwtAuthentication(builder.Configuration);
+            builder.Services.AddMongoEventStore(builder.Configuration);
 
+            builder.Services.AddJwtAuthentication(builder.Configuration);
             builder.RegisterDependencies();
-            
 
             builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(ApplicationLayer).Assembly);
 
@@ -58,13 +59,15 @@ public class Program
                 cfg.RegisterServicesFromAssemblies(
                     typeof(ApplicationLayer).Assembly,
                     typeof(Program).Assembly
-                    );
+                );
             });
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             var app = builder.Build();
+
             app.UseMiddleware<ValidationExceptionMiddleware>();
+
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<DbContext>();
@@ -83,7 +86,6 @@ public class Program
             app.UseAuthorization();
 
             app.UseBasicHealthChecks();
-
             app.MapControllers();
 
             app.Run();

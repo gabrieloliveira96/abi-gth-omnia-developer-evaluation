@@ -55,6 +55,11 @@ These business rules define quantity-based discounting tiers and limitations:
    - Maximum limit: 20 items per product
    - No discounts allowed for quantities below 4 items
 
+## Exec
+See [Exec](/.doc/project-exec.md)
+
+
+
 ## Overview
 This section provides a high-level overview of the project and the various skills and competencies it aims to assess for developer candidates. 
 

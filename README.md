@@ -56,8 +56,10 @@ These business rules define quantity-based discounting tiers and limitations:
    - No discounts allowed for quantities below 4 items
 
 ## Exec
-See [Exec](/.doc/project-exec.md)
+This section provides detailed instructions on how to configure, run, and test the project locally using Docker and Docker Compose.  
+It ensures that any developer or reviewer can easily set up the environment, understand runtime dependencies, and validate application behavior.
 
+See [Exec Guide](/.doc/project-exec.md) for full details.
 
 
 ## Overview
@@ -89,15 +91,3 @@ This section includes links to the detailed documentation for the different API 
 This section describes the overall structure and organization of the project files and directories. 
 
 See [Project Structure](/.doc/project-structure.md)
-
-
-## ⚙️ How to Run the Application
-
-### 🔧 Requirements
-
-- Docker & Docker Compose
-
-### ▶ Run with Docker
-
-```bash
-docker-compose up --build

@@ -1,5 +1,6 @@
 using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using MockQueryable;
 using NSubstitute;
 using Xunit;
@@ -14,7 +15,7 @@ public class GetSalesHandlerTests
     {
         _saleRepository = Substitute.For<ISaleRepository>();
         _mapper = Substitute.For<IMapper>();
-        _handler = new GetSalesHandler(_saleRepository, _mapper);
+        _handler = new GetSalesHandler(_saleRepository, _mapper,Substitute.For<ILogger<GetSalesHandler>>());
     }
 
     [Fact(DisplayName = "Given no filters When handling GetSales Then returns all paginated results")]

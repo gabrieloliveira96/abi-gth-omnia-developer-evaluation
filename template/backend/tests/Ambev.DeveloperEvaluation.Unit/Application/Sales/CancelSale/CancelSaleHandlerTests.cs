@@ -44,20 +44,24 @@ public class CancelSaleHandlerTests
         await _saleRepository.Received(1).UpdateAsync(sale);
     }
 
-    [Fact(DisplayName = "Given invalid sale ID When cancelling Then returns false")]
-    public async Task Handle_SaleNotFound_ReturnsFalse()
+    [Fact(DisplayName = "Given invalid sale ID When cancelling Then throws InvalidOperationException")]
+    public async Task Handle_SaleNotFound_ThrowsInvalidOperationException()
     {
         var command = new CancelSaleCommand(Guid.NewGuid());
         _saleRepository.GetByIdAsync(command.Id).Returns((Sale?)null);
 
-        var result = await _handler.Handle(command, default);
+        var act = async () => await _handler.Handle(command, default);
 
-        result.Should().BeFalse();
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("Sale not found");
+
         await _saleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
     }
 
-    [Fact(DisplayName = "Given already canceled sale When cancelling again Then returns false")]
-    public async Task Handle_SaleAlreadyCancelled_ReturnsFalse()
+
+    [Fact(DisplayName = "Given already canceled sale When cancelling again Then throws InvalidOperationException")]
+    public async Task Handle_SaleAlreadyCancelled_ThrowsInvalidOperationException()
     {
         var sale = new Sale(DateTime.UtcNow, "C123", "Cliente", "B001", "Filial");
         var saleId = Guid.NewGuid();
@@ -65,14 +69,17 @@ public class CancelSaleHandlerTests
         sale.Cancel();
 
         _saleRepository.GetByIdAsync(saleId).Returns(sale);
-
         var command = new CancelSaleCommand(saleId);
 
-        var result = await _handler.Handle(command, default);
+        var act = async () => await _handler.Handle(command, default);
 
-        result.Should().BeFalse();
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("Sale already is canceled");
+
         await _saleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
     }
+
 
     [Fact(DisplayName = "Given invalid command When handling Then throws validation exception")]
     public async Task Handle_InvalidCommand_ThrowsValidationException()

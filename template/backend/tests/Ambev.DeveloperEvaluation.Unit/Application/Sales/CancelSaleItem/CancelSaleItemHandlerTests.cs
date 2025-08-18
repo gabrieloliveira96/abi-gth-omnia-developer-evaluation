@@ -57,23 +57,24 @@ public class CancelSaleItemHandlerTests
             .WithMessage("*Sale ID is required*");
     }
 
-    [Fact(DisplayName = "Given non-existent sale When cancelling item Then returns false")]
-    public async Task Handle_SaleNotFound_ReturnsFalse()
+    [Fact(DisplayName = "Given non-existent sale When cancelling item Then throws InvalidOperationException")]
+    public async Task Handle_SaleNotFound_ThrowsInvalidOperationException()
     {
-    
         var command = CancelSaleItemHandlerTestData.GenerateValidCommand();
         _saleRepository.GetByIdAsync(command.SaleId).Returns((Sale?)null);
 
-        var result = await _handler.Handle(command, default);
+        var act = async () => await _handler.Handle(command, default);
 
-        result.Should().BeFalse();
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("Sale not found");
+
         await _saleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
     }
 
-    [Fact(DisplayName = "Given non-existent item in sale When cancelling Then returns false")]
-    public async Task Handle_ItemNotFound_ReturnsFalse()
+    [Fact(DisplayName = "Given non-existent item in sale When cancelling Then throws InvalidOperationException")]
+    public async Task Handle_ItemNotFound_ThrowsInvalidOperationException()
     {
-    
         var command = CancelSaleItemHandlerTestData.GenerateValidCommand();
 
         var sale = new Sale(DateTime.UtcNow, "C123", "Cliente", "B001", "Filial");
@@ -81,9 +82,13 @@ public class CancelSaleItemHandlerTests
 
         _saleRepository.GetByIdAsync(command.SaleId).Returns(sale);
 
-        var result = await _handler.Handle(command, default);
+        var act = async () => await _handler.Handle(command, default);
 
-        result.Should().BeFalse();
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("Item not found");
+
         await _saleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
     }
+
 }

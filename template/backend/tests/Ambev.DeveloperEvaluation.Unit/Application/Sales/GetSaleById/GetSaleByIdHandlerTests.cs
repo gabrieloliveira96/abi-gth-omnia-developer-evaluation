@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
@@ -8,13 +9,13 @@ public class GetSaleByIdHandlerTests
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
-    private readonly GetSaleByIdQueryHandler _handler;
+    private readonly GetSaleByIdHandler _handler;
 
     public GetSaleByIdHandlerTests()
     {
         _saleRepository = Substitute.For<ISaleRepository>();
         _mapper = Substitute.For<IMapper>();
-        _handler = new GetSaleByIdQueryHandler(_saleRepository, _mapper);
+        _handler = new GetSaleByIdHandler(_saleRepository, _mapper,Substitute.For<ILogger<GetSaleByIdHandler>>());
     }
 
     [Fact(DisplayName = "Given valid sale ID When getting sale Then returns mapped result")]
@@ -36,17 +37,19 @@ public class GetSaleByIdHandlerTests
         result!.Id.Should().Be(command.Id);
     }
 
-    [Fact(DisplayName = "Given non-existent sale ID When getting sale Then returns null")]
-    public async Task Handle_SaleNotFound_ReturnsNull()
+    [Fact(DisplayName = "Given non-existent sale ID When getting sale Then throws InvalidOperationException")]
+    public async Task Handle_SaleNotFound_ThrowsInvalidOperationException()
     {
-        
         var command = GetSaleByIdTestData.ValidCommand();
         _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns((Sale?)null);
 
-        var result = await _handler.Handle(command, default);
+        var act = async () => await _handler.Handle(command, default);
 
-        result.Should().BeNull();
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("Sale not found");
     }
+
 
     [Fact(DisplayName = "Given invalid sale ID When getting sale Then throws validation exception")]
     public async Task Handle_InvalidCommand_ThrowsValidationException()
